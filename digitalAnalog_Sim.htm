@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Signal Wars: Analog vs Digital</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f4; }
+    h1 { text-align: center; }
+    .controls, .canvas-container { display: flex; justify-content: space-around; margin: 20px 0; }
+    .controls div { margin: 0 10px; }
+    canvas { background: white; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <h1>Signal Wars: Analog vs Digital</h1>
+
+  <div class="controls">
+    <div>
+      <label>Signal Type:</label>
+      <select id="signalType">
+        <option value="analog">Analog</option>
+        <option value="digital">Digital</option>
+      </select>
+    </div>
+    <div>
+      <label>Frequency:</label>
+      <input type="range" id="frequency" min="1" max="20" value="5">
+      <span id="freqVal">5</span>
+    </div>
+    <div>
+      <label>Amplitude:</label>
+      <input type="range" id="amplitude" min="1" max="10" value="5">
+      <span id="ampVal">5</span>
+    </div>
+    <div>
+      <label>Noise:</label>
+      <input type="range" id="noise" min="0" max="5" value="0">
+      <span id="noiseVal">0</span>
+    </div>
+  </div>
+
+  <div class="canvas-container">
+    <canvas id="waveformChart" width="800" height="400"></canvas>
+  </div>
+
+  <script>
+    const ctx = document.getElementById('waveformChart').getContext('2d');
+    let chart;
+
+    function generateWaveform(type, freq, amp, noiseLevel) {
+      const data = [];
+      const labels = [];
+      for (let x = 0; x < 100; x++) {
+        let t = x / 100 * 2 * Math.PI * freq;
+        let base = type === 'analog' ? amp * Math.sin(t) : (Math.sin(t) > 0 ? amp : -amp);
+        let noise = (Math.random() * 2 - 1) * noiseLevel;
+        data.push(base + noise);
+        labels.push(x);
+      }
+      return { labels, data };
+    }
+
+    function updateChart() {
+      const type = document.getElementById('signalType').value;
+      const freq = parseFloat(document.getElementById('frequency').value);
+      const amp = parseFloat(document.getElementById('amplitude').value);
+      const noise = parseFloat(document.getElementById('noise').value);
+
+      document.getElementById('freqVal').textContent = freq;
+      document.getElementById('ampVal').textContent = amp;
+      document.getElementById('noiseVal').textContent = noise;
+
+      const { labels, data } = generateWaveform(type, freq, amp, noise);
+
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: `${type.charAt(0).toUpperCase() + type.slice(1)} Signal`,
+            data: data,
+            borderColor: 'blue',
+            borderWidth: 2,
+            pointRadius: 0,
+            fill: false,
+            tension: 0.3
+          }]
+        },
+        options: {
+          animation: false,
+          scales: {
+            y: {
+              min: -15,
+              max: 15
+            }
+          }
+        }
+      });
+    }
+
+    document.querySelectorAll('input, select').forEach(el => {
+      el.addEventListener('input', updateChart);
+    });
+
+    updateChart();
+  </script>
+</body>
+</html>
